@@ -1,0 +1,367 @@
+<title>코넬 강의노트</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 과목 사이드바 + 코넬 노트 3분할(단서 칸 | 필기 칸 / 하단 요약 칸) */
+:root {
+  --bg: #eef1f4;
+  --paper: #fbfcfd;
+  --ink: #1d2733;
+  --muted: #5d6b7a;
+  --rule: #d5dde6;
+  --margin: #c94f4f;
+  --accent: #2c5d8f;
+  --accent-soft: #dfe9f3;
+  --font-display: "Gowun Batang", "Nanum Myeongjo", Georgia, serif;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12171d; --paper: #1a2129; --ink: #e3e9ef; --muted: #93a1b0; --rule: #2c3743;
+  --margin: #d97272; --accent: #7fb0e0; --accent-soft: #233446; color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #12171d; --paper: #1a2129; --ink: #e3e9ef; --muted: #93a1b0; --rule: #2c3743;
+  --margin: #d97272; --accent: #7fb0e0; --accent-soft: #233446; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--ink); font: 15px/1.6 var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 16px;
+}
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 16px; max-width: 1240px; margin: 0 auto; min-height: calc(100% - 0px); }
+@media (max-width: 820px) { .app { grid-template-columns: minmax(0, 1fr); } }
+
+/* Sidebar */
+.side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.brand { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.brand h1 { font: 700 1.5rem/1.2 var(--font-display); margin: 0; text-wrap: balance; }
+.mode { font: 500 11px/1 var(--font-mono); color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.search { width: 100%; padding: 9px 12px; border: 1px solid var(--rule); border-radius: 8px; background: var(--paper); }
+.new-btn { padding: 10px 12px; border-radius: 8px; border: 0; background: var(--accent); color: var(--paper); font-weight: 600; }
+.list { display: flex; flex-direction: column; gap: 14px; overflow: auto; }
+.subject h2 { font: 600 11px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; display: flex; justify-content: space-between; }
+.subject ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.item { width: 100%; text-align: left; background: none; border: 0; border-radius: 6px; padding: 7px 10px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; }
+.item:hover { background: var(--accent-soft); }
+.item[aria-current="true"] { background: var(--accent-soft); box-shadow: inset 2px 0 0 var(--accent); }
+.item .no { font: 500 12px/1.5 var(--font-mono); color: var(--accent); grid-row: span 2; padding-top: 1px; font-variant-numeric: tabular-nums; }
+.item .t { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item .d { font-size: 12px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); display: inline-block; }
+.empty-side { color: var(--muted); font-size: 13px; padding: 8px 2px; }
+@media (max-width: 820px) { .list { max-height: 220px; } }
+
+/* Note sheet */
+.sheet { background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; display: flex; flex-direction: column; min-width: 0; }
+.head { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 18px 22px 14px; border-bottom: 2px solid var(--ink); align-items: end; }
+.head-fields { display: grid; grid-template-columns: minmax(0, 1fr) 90px 150px; gap: 8px 12px; min-width: 0; }
+@media (max-width: 600px) { .head-fields { grid-template-columns: minmax(0, 1fr) 80px; } .head-fields .f-date { grid-column: 1 / -1; } .head { grid-template-columns: minmax(0, 1fr); } }
+.field { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.field label { font: 500 10px/1 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.field input { border: 0; border-bottom: 1px dashed var(--rule); background: none; padding: 4px 0; min-width: 0; }
+.field input:focus { outline: none; border-bottom-color: var(--accent); }
+.f-title { grid-column: 1 / -1; }
+.f-title input { font: 700 1.6rem/1.3 var(--font-display); }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--rule); background: none; font-size: 14px; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--paper); font-weight: 600; }
+.btn.primary:disabled { opacity: .55; cursor: progress; }
+.btn.danger { color: var(--margin); }
+.btn.danger.armed { background: var(--margin); color: var(--paper); border-color: var(--margin); }
+
+.cornell { display: grid; grid-template-columns: 30% minmax(0, 1fr); flex: 1; min-height: 420px; }
+@media (max-width: 600px) { .cornell { grid-template-columns: minmax(0, 1fr); } .cue { border-right: 0 !important; border-bottom: 1px solid var(--rule); order: 2; } }
+.cue { border-right: 2px solid var(--margin); padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.zone-label { font: 600 10px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--margin); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 13px; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+.qs { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+.hint { color: var(--muted); font-size: 13px; margin: 0; }
+.notes { padding: 16px 22px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.notes textarea {
+  flex: 1; width: 100%; min-height: 380px; border: 0; resize: vertical; background:
+    repeating-linear-gradient(to bottom, transparent 0, transparent 27px, var(--rule) 27px, var(--rule) 28px);
+  line-height: 28px; padding: 0; background-attachment: local;
+}
+.notes textarea:focus { outline: none; }
+.summary { border-top: 2px solid var(--ink); padding: 16px 22px 20px; display: flex; flex-direction: column; gap: 8px; }
+.summary p { margin: 0; max-width: 72ch; }
+.status { font: 400 12px/1 var(--font-mono); color: var(--muted); padding: 10px 22px; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.err { color: var(--margin); }
+
+/* Empty state */
+.welcome { padding: 48px 28px; display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
+.welcome h2 { font: 700 1.8rem/1.25 var(--font-display); margin: 0; text-wrap: balance; }
+.welcome p { margin: 0; color: var(--muted); }
+.diagram { display: grid; grid-template-columns: 30% 1fr; border: 1px solid var(--rule); font: 500 11px/1 var(--font-mono); color: var(--muted); letter-spacing: .06em; }
+.diagram div { padding: 14px 10px; }
+.diagram .c { border-right: 2px solid var(--margin); }
+.diagram .s { grid-column: 1 / -1; border-top: 2px solid var(--ink); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><h1>코넬 강의노트</h1><span class="mode" id="mode">연결 중</span></div>
+    <input class="search" id="search" type="search" placeholder="노트 검색" aria-label="노트 검색">
+    <button class="new-btn" id="newBtn">+ 새 강의노트</button>
+    <nav class="list" id="list" aria-label="강의 목록"></nav>
+  </aside>
+
+  <main class="sheet" id="sheet">
+    <div class="welcome" id="welcome">
+      <h2>필기는 오른쪽에, 정리는 AI가.</h2>
+      <p>코넬식 노트 양식이야. 강의 중엔 필기 칸에만 적고, 끝나면 <b>AI 요약</b>을 누르면 단서 칸(핵심 개념·복습 질문)과 아래 요약 칸이 채워져.</p>
+      <div class="diagram" aria-hidden="true"><div class="c">단서 · CUE</div><div>필기 · NOTES</div><div class="s">요약 · SUMMARY</div></div>
+      <div class="actions"><button class="btn primary" id="startBtn">첫 노트 쓰기</button><button class="btn" id="sampleBtn">예시 노트 넣어보기</button></div>
+    </div>
+
+    <div id="editor" hidden style="display:flex;flex-direction:column;flex:1">
+      <div class="head">
+        <div class="head-fields">
+          <div class="field f-title"><label for="fTitle">강의 제목</label><input id="fTitle" placeholder="예: 3강 수요와 공급"></div>
+          <div class="field"><label for="fSubject">과목</label><input id="fSubject" placeholder="예: 경제학원론" list="subjects"></div>
+          <div class="field"><label for="fNo">회차</label><input id="fNo" inputmode="numeric" placeholder="3"></div>
+          <div class="field f-date"><label for="fDate">날짜</label><input id="fDate" type="date"></div>
+          <datalist id="subjects"></datalist>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="aiBtn">AI 요약</button>
+          <button class="btn danger" id="delBtn">삭제</button>
+        </div>
+      </div>
+      <div class="cornell">
+        <section class="cue" aria-label="단서 칸">
+          <span class="zone-label">단서 · Cue</span>
+          <div id="cueBody"><p class="hint">필기를 마치고 AI 요약을 누르면 핵심 개념과 복습 질문이 여기 생겨.</p></div>
+        </section>
+        <section class="notes" aria-label="필기 칸">
+          <label class="zone-label" for="fBody" style="color:var(--accent)">필기 · Notes</label>
+          <textarea id="fBody" placeholder="강의 내용을 자유롭게 적어. 줄 단위로 적으면 요약이 더 정확해져."></textarea>
+        </section>
+      </div>
+      <section class="summary" aria-label="요약 칸">
+        <span class="zone-label" style="color:var(--ink)">요약 · Summary</span>
+        <div id="sumBody"><p class="hint">아직 요약이 없어.</p></div>
+      </section>
+      <div class="status"><span id="saveState">저장됨</span><span id="charCount">0자</span></div>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const today = () => new Date().toISOString().slice(0, 10);
+  const uid = () => "n" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+  let notes = {};          // id -> note
+  let currentId = null;
+  let store = null;        // {save(note), remove(id)}
+  let sample = null;
+  let query = "";
+  const pending = {};      // id -> timer
+  let busy = false;
+
+  // ---------- storage: db (private per user) or localStorage fallback ----------
+  const LS = "cornell-notes-v1";
+  function lsLoad() { try { return JSON.parse(localStorage.getItem(LS) || "{}"); } catch { return {}; } }
+  function lsWrite() { try { localStorage.setItem(LS, JSON.stringify(notes)); } catch {} }
+  const localStore = { save: async () => lsWrite(), remove: async () => lsWrite() };
+
+  function useLocal(label) {
+    store = localStore; notes = lsLoad(); $("mode").textContent = label; render();
+  }
+
+  async function init() {
+    notes = {}; render();
+    if (!window.claude?.use) { useLocal("이 브라우저"); return; }
+    const [db, user, smp] = await Promise.all([
+      window.claude.use("db"), window.claude.use("user"), window.claude.use("sample"),
+    ]);
+    sample = smp;
+    const id = user ? await user.id() : null;
+    if (!db || !id) { useLocal("이 브라우저"); return; }
+    const col = db.collection("data/users/" + id);
+    store = {
+      save: (n) => col.doc(n.id).set({ ...n }),
+      remove: (nid) => col.doc(nid).delete(),
+    };
+    $("mode").textContent = "불러오는 중";
+    const timer = setTimeout(() => { $("mode").textContent = "응답 지연"; }, 10000);
+    col.onSnapshot((snap) => {
+      clearTimeout(timer);
+      const next = {};
+      snap.docs.forEach((d) => { const v = d.data(); if (v && v.kind === "note") next[d.id] = { ...v, id: d.id }; });
+      // keep unsaved local edits for the open note
+      if (currentId && pending[currentId] && notes[currentId]) next[currentId] = notes[currentId];
+      notes = next;
+      $("mode").textContent = "내 계정 저장";
+      render();
+    }, (e) => { clearTimeout(timer); $("mode").textContent = "저장 오류"; console.warn(e); });
+  }
+
+  // ---------- render ----------
+  function sorted() {
+    return Object.values(notes).sort((a, b) =>
+      (a.subject || "").localeCompare(b.subject || "", "ko") ||
+      (Number(a.no) || 0) - (Number(b.no) || 0) || (a.date || "").localeCompare(b.date || ""));
+  }
+
+  function render() {
+    const q = query.trim().toLowerCase();
+    const all = sorted();
+    const shown = q ? all.filter((n) => [n.title, n.subject, n.body, n.summary?.summary].join(" ").toLowerCase().includes(q)) : all;
+    const groups = {};
+    shown.forEach((n) => (groups[n.subject || "과목 미정"] ||= []).push(n));
+    const list = $("list");
+    if (!all.length) list.innerHTML = `<p class="empty-side">아직 노트가 없어. 위 버튼으로 첫 강의를 시작해봐.</p>`;
+    else if (!shown.length) list.innerHTML = `<p class="empty-side">“${esc(query)}”에 맞는 노트가 없어.</p>`;
+    else list.innerHTML = Object.entries(groups).map(([s, arr]) => `
+      <div class="subject"><h2><span>${esc(s)}</span><span>${arr.length}</span></h2><ul>
+      ${arr.map((n) => `<li><button class="item" data-id="${esc(n.id)}" aria-current="${n.id === currentId}">
+        <span class="no">${n.no ? esc(String(n.no).padStart(2, "0")) : "—"}</span>
+        <span class="t">${esc(n.title || "제목 없음")}</span>
+        <span class="d">${esc(n.date || "")}${n.summary ? ' <span class="dot" title="요약 있음"></span>요약' : ""}</span>
+      </button></li>`).join("")}</ul></div>`).join("");
+    $("subjects").innerHTML = [...new Set(all.map((n) => n.subject).filter(Boolean))].map((s) => `<option value="${esc(s)}">`).join("");
+
+    const n = notes[currentId];
+    $("welcome").hidden = !!n;
+    $("editor").hidden = !n;
+    $("aiBtn").hidden = !sample;
+    if (n) fillEditor(n);
+  }
+
+  function fillEditor(n) {
+    const set = (id, v) => { const el = $(id); if (document.activeElement !== el && el.value !== (v ?? "")) el.value = v ?? ""; };
+    set("fTitle", n.title); set("fSubject", n.subject); set("fNo", n.no); set("fDate", n.date); set("fBody", n.body);
+    $("charCount").textContent = (n.body || "").length.toLocaleString() + "자";
+    renderSummary(n.summary);
+  }
+
+  function renderSummary(s) {
+    if (!s) {
+      $("cueBody").innerHTML = `<p class="hint">${sample ? "필기를 마치고 AI 요약을 누르면 핵심 개념과 복습 질문이 여기 생겨." : "AI 요약은 claude.ai에서 열었을 때 쓸 수 있어. 단서는 직접 적어도 돼."}</p>`;
+      $("sumBody").innerHTML = `<p class="hint">아직 요약이 없어.</p>`;
+      return;
+    }
+    $("cueBody").innerHTML = `
+      <div class="chips">${(s.keywords || []).map((k) => `<span class="chip">${esc(k)}</span>`).join("")}</div>
+      <ol class="qs">${(s.questions || []).map((q) => `<li>${esc(q)}</li>`).join("")}</ol>`;
+    $("sumBody").innerHTML = (s.summary || "").split(/\n+/).map((p) => `<p>${esc(p)}</p>`).join("");
+  }
+
+  // ---------- editing ----------
+  function open(id) { currentId = id; disarm(); render(); }
+
+  async function create(data = {}) {
+    const last = sorted().filter((n) => n.subject === data.subject);
+    const n = { kind: "note", id: uid(), title: "", subject: "", no: "", date: today(), body: "", summary: null, updated: Date.now(), ...data };
+    if (!data.no && n.subject && last.length) n.no = String((Number(last.at(-1).no) || 0) + 1);
+    notes[n.id] = n; currentId = n.id; render();
+    try { await store.save(n); } catch (e) { $("saveState").innerHTML = `<span class="err">저장 실패: 다시 입력하면 재시도해.</span>`; }
+    setTimeout(() => $("fTitle").focus(), 0);
+    return n;
+  }
+
+  function scheduleSave(id) {
+    $("saveState").textContent = "저장 중…";
+    clearTimeout(pending[id]);
+    pending[id] = setTimeout(async () => {
+      const n = notes[id]; if (!n) return;
+      try { await store.save(n); delete pending[id]; if (id === currentId) $("saveState").textContent = "저장됨"; }
+      catch (e) { delete pending[id]; $("saveState").innerHTML = `<span class="err">저장 실패: 연결을 확인하고 다시 입력해봐.</span>`; }
+    }, 700);
+  }
+
+  const fieldMap = { fTitle: "title", fSubject: "subject", fNo: "no", fDate: "date", fBody: "body" };
+  Object.entries(fieldMap).forEach(([elId, key]) => {
+    $(elId).addEventListener("input", (e) => {
+      const n = notes[currentId]; if (!n) return;
+      n[key] = e.target.value; n.updated = Date.now();
+      if (key === "body") $("charCount").textContent = n.body.length.toLocaleString() + "자";
+      scheduleSave(n.id);
+      if (key !== "body") { const keep = document.activeElement; renderListOnly(); keep?.focus(); }
+    });
+  });
+  function renderListOnly() { const saved = currentId; render(); currentId = saved; }
+
+  $("list").addEventListener("click", (e) => { const b = e.target.closest(".item"); if (b) open(b.dataset.id); });
+  $("search").addEventListener("input", (e) => { query = e.target.value; render(); });
+  $("newBtn").addEventListener("click", () => create({ subject: notes[currentId]?.subject || "" }));
+  $("startBtn").addEventListener("click", () => create());
+  $("sampleBtn").addEventListener("click", () => create({
+    title: "예시) 3강 수요와 공급", subject: "경제학원론", no: "3",
+    body: [
+      "수요의 법칙: 다른 조건이 같으면 가격↑ → 수요량↓",
+      "수요곡선 우하향. 이동(movement) vs 이동(shift) 구분!",
+      " - 가격 변화 → 곡선 위 이동",
+      " - 소득, 선호, 대체재/보완재 가격 → 곡선 자체가 이동",
+      "정상재: 소득↑ → 수요↑ / 열등재: 소득↑ → 수요↓",
+      "공급의 법칙: 가격↑ → 공급량↑, 공급곡선 우상향",
+      "균형: 수요량 = 공급량인 점에서 가격 결정",
+      "초과수요 → 가격 상승 압력, 초과공급 → 가격 하락 압력",
+      "교수님 강조: 시험에 '곡선 이동 원인' 그래프 문제 자주 나옴",
+    ].join("\n"),
+  }));
+
+  // delete with in-page confirm
+  let armTimer = null;
+  function disarm() { const b = $("delBtn"); b.classList.remove("armed"); b.textContent = "삭제"; clearTimeout(armTimer); }
+  $("delBtn").addEventListener("click", async () => {
+    const b = $("delBtn");
+    if (!b.classList.contains("armed")) { b.classList.add("armed"); b.textContent = "한 번 더 누르면 삭제"; armTimer = setTimeout(disarm, 3000); return; }
+    disarm();
+    const id = currentId; clearTimeout(pending[id]); delete pending[id];
+    delete notes[id]; currentId = sorted()[0]?.id || null; render();
+    try { await store.remove(id); } catch (e) { $("mode").textContent = "삭제 실패"; }
+  });
+
+  // ---------- AI summary ----------
+  $("aiBtn").addEventListener("click", async () => {
+    const n = notes[currentId]; if (!n || busy || !sample) return;
+    if ((n.body || "").trim().length < 20) { $("saveState").textContent = "필기가 너무 짧아. 조금 더 적고 요약해봐."; return; }
+    busy = true; const btn = $("aiBtn"); btn.disabled = true; btn.textContent = "요약 중…";
+    $("sumBody").innerHTML = `<p class="hint">Claude가 필기를 정리하는 중…</p>`;
+    try {
+      const prompt = `너는 대학생의 코넬식 강의노트 정리를 돕는 조교야. 아래 필기를 읽고 JSON만 출력해.
+형식: {"summary": "3~5문장 한국어 요약. 강의의 핵심 흐름과 결론", "keywords": ["핵심 개념 3~6개, 각 2~8자"], "questions": ["필기만 보고 답할 수 있는 복습 질문 3~5개"]}
+필기에 없는 내용은 지어내지 마.
+
+과목: ${n.subject || "미정"}
+강의: ${n.title || "제목 없음"}
+필기:
+${n.body}`;
+      const out = await sample.json(prompt, { modelTier: "default" });
+      n.summary = {
+        summary: String(out?.summary || ""),
+        keywords: Array.isArray(out?.keywords) ? out.keywords.map(String).slice(0, 8) : [],
+        questions: Array.isArray(out?.questions) ? out.questions.map(String).slice(0, 6) : [],
+        at: Date.now(),
+      };
+      n.updated = Date.now();
+      renderSummary(n.summary); scheduleSave(n.id); renderListOnly();
+    } catch (e) {
+      const msg = e?.code === "not_granted" ? "AI 사용 권한이 거부됐어. 아티팩트 권한 메뉴에서 켤 수 있어."
+        : e?.code === "rate_limited" ? "요청이 많아. 잠시 뒤에 다시 눌러줘."
+        : "요약을 만들지 못했어. 잠시 뒤에 다시 시도해줘.";
+      if (e?.code === "not_granted") { sample = null; $("aiBtn").hidden = true; }
+      $("sumBody").innerHTML = `<p class="err">${esc(msg)}</p>`;
+    } finally { busy = false; btn.disabled = false; btn.textContent = "AI 요약"; }
+  });
+
+  init();
+})();
+</script>
